@@ -1,10 +1,10 @@
 {
   "name": "ludum-dare-32",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Ludum Dare 32 entry - command line as a weapon",
+  "main": "server/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"No test specified\" && exit 0",
     "start": "node server/index.js",
     "watch": "watchify src/index.js -o dist/bundle.js -dv",
     "copy-assets": "cp -r src/assets dist/",
@@ -18,19 +18,22 @@
     "type": "git",
     "url": "https://github.com/Deadarius/ludum-dare-32.git"
   },
-  "author": "",
-  "license": " ",
+  "author": "Deadarius",
+  "license": "",
   "bugs": {
     "url": "https://github.com/Deadarius/ludum-dare-32/issues"
   },
   "homepage": "https://github.com/Deadarius/ludum-dare-32",
   "dependencies": {
+    "baudio": "^2.1.2",
     "browserify": "^9.0.8",
     "express": "^4.12.3",
     "lodash": "^3.7.0",
     "minimist": "^1.1.1",
+    "plucky": "^0.1.1",
     "socket.io": "^1.3.5",
     "socket.io-client": "^1.3.5",
-    "three": "^0.70.0"
+    "three": "^0.70.0",
+    "webaudio": "^2.0.0"
   }
 }

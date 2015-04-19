@@ -8,8 +8,17 @@ var server = require('http').Server(app);
 var socketIo = require('socket.io')(server);
 var _ = require('lodash');
 
+var deathMessage = require('./death-message');
 var commandsCache = [];
 var connections = {};
+var notifications = [];
+
+function addNotification(key, text){
+  notifications.push({
+    key: key,
+    text: text
+  });
+}
 
 var state = {
 	units: {},
@@ -28,6 +37,7 @@ socketIo.on('connection', function (socket) {
 
   socket.on('login', function(username){
     console.log('LOGIN: %s[%s]', username, this.id);
+    addNotification('login', username + ' has just joined the party');
     state.units[this.id] = {
       position:{
         x: Math.floor(Math.random() * 10),
@@ -171,7 +181,7 @@ function updateBullets(){
     moveDict[bullet.direction](bullet);
     if(bullet.position.x > 1000 || bullet.position.y > 1000 ||
       bullet.position.x < -1000 || bullet.position.y < -1000){
-        delete state.bullets[index];
+        state.bullets.splice(index);
     } else {
       Object.keys(state.units).forEach(function(id){
         var unit = state.units[id];
@@ -182,6 +192,7 @@ function updateBullets(){
           if(killer){
             killer.killed++;
           }
+          addNotification('dead', deathMessage(killer.username, unit.username));
 
           socketIo.emit('dead', {
             died: unit.username,
@@ -195,6 +206,10 @@ function updateBullets(){
 }
 
 setInterval(function(){
+
+  if(commandsCache.length > 0){
+    socketIo.emit('commands', commandsCache);
+  }
   var changed = false;
 
   changed = timeOutConnections();
@@ -203,9 +218,12 @@ setInterval(function(){
 
   if(changed){
     socketIo.emit('state', state);
-    socketIo.emit('commands', commandsCache);
   }
 
+  if(notifications.length > 0){
+    socketIo.emit('notifications', notifications);
+    notifications = [];
+  }
 }, 50);
 
 app.use('/', express.static(path.join(__dirname, '../dist')));

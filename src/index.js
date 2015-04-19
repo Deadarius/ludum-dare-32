@@ -3,6 +3,8 @@
 var THREE = require('three');
 var socket = require('socket.io-client');
 var Unit = require('./unit');
+var audio = require('./audio');
+
 var _ = require('lodash');
 var util = require('util');
 var minimist = require('minimist');
@@ -13,7 +15,7 @@ var scene = new THREE.Scene();
     color: 0x00ff00,
     wireframe: true
 });
-var backGeometry = new THREE.PlaneGeometry(100000, 100000, 500, 500);
+var backGeometry = new THREE.PlaneBufferGeometry(100000, 100000, 500, 500);
 var backMesh = new THREE.Mesh(backGeometry, backMaterial);
 backMesh.position.set(0, 0, 0);
 scene.add(backMesh);
@@ -89,6 +91,26 @@ socketIo.on('dead', function(data){
   players[data.died].die();
 });
 
+socketIo.on('commands', function(commands){
+  if(_.some(commands, {command: 'shot'})){
+    audio.shot();
+  }
+});
+
+socketIo.on('notifications', function(notifications){
+  if(_.some(notifications, {key: 'login'})){
+    audio.spawn();
+  }
+
+  if(_.some(notifications, {command: 'dead'})){
+    audio.die();
+  }
+
+  _.each(notifications, function(notification){
+    addLog(notification.text);
+  });
+});
+
 socketIo.on('state', function(state){
   _.values(state.units)
     .forEach(function(unit){
@@ -96,12 +118,13 @@ socketIo.on('state', function(state){
       if(!player){
         if(unit.username === username){
           player = players[unit.username] = new Unit(scene, playerUnitMaterial);
-          camera.lookAt(player.mesh.position);
         } else {
           player = players[unit.username] = new Unit(scene, unitMaterial);
         }
         player.username = unit.username;
       }
+
+      unit.username === username && camera.lookAt(player.mesh.position);
 
       player.position = unit.position;
       player.direction = unit.direction;
