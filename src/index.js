@@ -5,6 +5,7 @@ var socket = require('socket.io-client');
 var Unit = require('./unit');
 var _ = require('lodash');
 var util = require('util');
+var minimist = require('minimist');
 
 var scene = new THREE.Scene();
 
@@ -51,8 +52,8 @@ var bulletMaterial = new THREE.MeshBasicMaterial( { map: bulletTexture, color: 0
 camera.position.z = 500;
 
 var socketIo = socket();
-var username = 'testusername';
-socketIo.emit('login', username);
+var username;
+
 setInterval(function(){
   socketIo.emit('heart-beat');
 }, 5000);
@@ -63,9 +64,9 @@ var bullets = [];
 socketIo.on('state', function(state){
   _.values(state.units)
     .forEach(function(unit){
-      var player = players[unit.id];
+      var player = players[unit.username];
       if(!player){
-        player = players[unit.id] = new Unit(scene, unitMaterial);
+        player = players[unit.username] = new Unit(scene, unitMaterial);
         player.username = unit.username;
       }
 
@@ -76,6 +77,9 @@ socketIo.on('state', function(state){
         console.debug('    POS:%s', util.inspect(player.position));
         console.debug('    DIR:%s:', util.inspect(player.direction));
         camera.lookAt(player.mesh.position);
+      }
+      if(unit.dead){
+        player.die();
       }
     });
 
@@ -99,7 +103,15 @@ function checkKey(e) {
   if (+code !== 13) {
     return;
   }
+
+  var args = minimist(commandInput.value.split(' '));
+  if(args._[0] === 'login'){
+    username = args._[1];
+    socketIo.emit('login', username);
+  }
+  else{
   socketIo.emit('command', commandInput.value);
+}
   commandInput.value = '';
 }
 

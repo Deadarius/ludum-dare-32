@@ -24,14 +24,15 @@ socketIo.on('connection', function (socket) {
   };
   socket.on('login', function(username){
     console.log('LOGIN: %s[%s]', username, this.id);
-    state.units= {}; //TODO Remove that
     state.units[this.id] = {
       position:{
         x: Math.floor(Math.random() * 10),
         y: Math.floor(Math.random() * 10)
       },
       direction: 'n',
-      username: username
+      username: username,
+      dead: false,
+      killed: 0
     };
 
     socket.emit('state', state);
@@ -44,7 +45,6 @@ socketIo.on('connection', function (socket) {
       connection.lastHeartBeat = new Date();
     }
   });
-
 
   socket.on('command', function (command) {
     var newCommand = {id: this.id, command: command};
@@ -106,12 +106,15 @@ var reverseDict = {
 
 setInterval(function(){
   var now = new Date();
+  var changed = false;
   Object.keys(connections).forEach(function(id){
     var connection = connections[id];
     var noHeartBeatDuration = now - connection.lastHeartBeat;
+
     if(noHeartBeatDuration > 15000){
       console.log('User timed out');
       removeConnection(connection.socket.id);
+      changed = true;
     }
   });
 
@@ -137,22 +140,40 @@ setInterval(function(){
         case 'shot':
           state.bullets.push({
             position: _.clone(unit.position),
-            direction: _.clone(unit.direction)
+            direction: _.clone(unit.direction),
+            shotBy: command.id
           });
       }
     });
-
+    changed = true;
     commandsCache = [];
   }
 
   if(state.bullets.length > 0){
-    state.bullets.forEach(function(bullet){
+    state.bullets.forEach(function(bullet, index){
       moveDict[bullet.direction](bullet);
+      Object.keys(state.units).forEach(function(id){
+        var unit = state.units[id];
+        if(unit.position.x === bullet.position.x &&
+          unit.position.y === bullet.position.y){
+            unit.dead = true;
+            var killer = state.units[bullet.shotBy];
+            if(killer){
+              killer.killed++;
+            }
+        }
+      });
+      if(bullet.position.x > 1000 || bullet.position.y > 1000 ||
+        bullet.position.x < -1000 || bullet.position.y < -1000){
+          delete state.bullets[index];
+      }
     });
+    changed = true;
   }
-
-  socketIo.emit('state', state);
-  socketIo.emit('commands', commandsCache);
+  if(changed){
+    socketIo.emit('state', state);
+    socketIo.emit('commands', commandsCache);
+  }
 
 }, 50);
 

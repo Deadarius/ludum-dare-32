@@ -9,6 +9,7 @@ function Unit(scene, material){
   mesh.position.set( 1, 1, 1 );
   this.mesh = mesh;
   scene.add(this.mesh);
+  this._scene = scene;
   this.direction = 'n';
   this.position = {x:1, y: 1};
 }
@@ -46,6 +47,10 @@ Object.defineProperty(Unit.prototype, 'position', {
     this.mesh.position.y = value.y * step;
   }
 });
+
+Unit.prototype.die = function die(){
+  this._scene.remove(this.mesh);
+};
 
 Unit.prototype.move = function move(){
   switch(this.direction){
