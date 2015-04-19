@@ -46,9 +46,7 @@ bulletTexture.minFilter = THREE.NearestFilter;
 bulletTexture.magFilter = THREE.NearestFilter;
 
 var bulletMaterial = new THREE.MeshBasicMaterial( { map: bulletTexture, color: 0xffff00, transparent: true } );
-
-camera.position.z = 800;
-
+camera.position.set(500, 500, 700);
 var socketIo = socket();
 var username;
 var currentPlayer;
@@ -81,6 +79,8 @@ function addDanger(text){
 socketIo.on('dead', function(data){
   if(data.died === username){
     addDanger('You\'re killed by ' + data.killer);
+    addWarning('Your score: ' + kills);
+    addWarning('Type \'submit\' to add your result to leaderboard');
   }
   else if (data.killer === username) {
     kills++;
@@ -88,12 +88,19 @@ socketIo.on('dead', function(data){
   }
 
   players[data.died].die();
+  delete players[data.died];
 });
 
 socketIo.on('commands', function(commands){
   if(_.some(commands, {command: 'shot'})){
     audio.shot();
   }
+});
+
+socketIo.on('disconnect', function(username){
+  players[username].die();
+  delete players[username];
+  addWarning(username + ' disconnected');
 });
 
 socketIo.on('notifications', function(notifications){
@@ -137,12 +144,18 @@ socketIo.on('state', function(state){
       bullet = bullets[index] = new Unit(scene, bulletMaterial);
     }
 
-    bullet.position = bulletServer.position;
-    bullet.direction = bulletServer.direction;
+    if(bullet.position.x !== bulletServer.position.x || bullet.position.y !== bulletServer.position.y){
+        bullet.position = bulletServer.position;
+    }
+
+    if(bullet.direction !== bulletServer.direction){
+      bullet.direction = bulletServer.direction;
+    }
   });
 });
 
 var commandInput = document.getElementById('command');
+commandInput.focus();
 commandInput.onkeyup = checkKey;
 
 function checkKey(e) {
@@ -176,12 +189,19 @@ function checkKey(e) {
     addLog('reverse');
     addLog('left');
     addLog('right');
+    addLog('strafe-left');
+    addLog('strafe-right');
     addLog('uturn');
     addLog('shot');
     addLog('stats');
     addLog('submit');
     addLog('best');
     addLog('about');
+    addLog('=========================');
+    addLog('This is multiplayer game');
+    addLog('You control your unit via command line');
+    addLog('Invite your friends to join you');
+    addLog('Login to start');
   }
   else if(cmd === 'about'){
     addLog('CMDer v1.0.0');
@@ -217,12 +237,15 @@ var render = function () {
   _.each(players, function(player){
     player.animate();
   });
+  _.each(bullets, function(bullet){
+    bullet.animate();
+  });
   if(currentPlayer){
     camera.lookAt(currentPlayer.mesh.position);
     var xx = Math.pow(currentPlayer.mesh.position.x, 2);
     var yy = Math.pow(currentPlayer.mesh.position.y, 2);
     var distanceFromCentre =  Math.sqrt(xx + yy);
-    camera.position.z = 800 + distanceFromCentre;
+    camera.position.z = 700 + distanceFromCentre / 2;
   }
   renderer.render(scene, camera);
 };

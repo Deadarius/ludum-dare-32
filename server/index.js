@@ -81,6 +81,7 @@ function removeConnection(id){
     return;
   }
   connection.socket.disconnect();
+  socketIo.emit('disconnect', connection.username);
   delete connections[id];
   delete state.units[id];
   console.log('user disconnected');
@@ -112,6 +113,20 @@ var moveDict = {
   'e': function(unit){unit.position.x++;},
   's': function(unit){unit.position.y--;},
   'w': function(unit){unit.position.x--;},
+};
+
+var strafeLeftDict = {
+  'n': function(unit){unit.position.x--;},
+  'e': function(unit){unit.position.y--;},
+  's': function(unit){unit.position.x++;},
+  'w': function(unit){unit.position.y++;},
+};
+
+var strafeRightDict = {
+  'n': function(unit){unit.position.x++;},
+  'e': function(unit){unit.position.y++;},
+  's': function(unit){unit.position.x--;},
+  'w': function(unit){unit.position.y--;},
 };
 
 var reverseDict = {
@@ -176,6 +191,12 @@ function executeCommands(){
           break;
         case 'reverse':
           reverseDict[unit.direction](unit);
+          break;
+        case 'strafe-left':
+          strafeLeftDict[unit.direction](unit);
+          break;
+        case 'strafe-right':
+          strafeRightDict[unit.direction](unit);
           break;
         case 'shot':
           state.bullets.push({
@@ -244,7 +265,7 @@ setInterval(function(){
     socketIo.emit('notifications', notifications);
     notifications = [];
   }
-}, 50);
+}, 200);
 
 app.use('/leaderboard', function(req, res){
   MongoClient.connect(url, function(err, db) {

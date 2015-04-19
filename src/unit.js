@@ -64,17 +64,17 @@ Unit.prototype.animate = function move(){
   var currentY = this.mesh.position.y / step;
 
   if(currentX < this.position.x){
-    this.mesh.position.x += 3;
+    this.mesh.position.x += 10;
   }
   else if(currentX > this.position.x){
-    this.mesh.position.x -= 3;
+    this.mesh.position.x -= 10;
   }
 
   if(currentY < this.position.y){
-    this.mesh.position.y += 3;
+    this.mesh.position.y += 10;
   }
   else if(currentY > this.position.y){
-    this.mesh.position.y -= 3;
+    this.mesh.position.y -= 10;
   }
 };
 
