@@ -45,6 +45,7 @@ socketIo.on('connection', function (socket) {
     console.log('LOGIN: %s[%s]', username, this.id);
     addNotification('login', username + ' has just joined the party');
     state.units[this.id] = {
+      id: this.id,
       position:{
         x: Math.floor(Math.random() * 10),
         y: Math.floor(Math.random() * 10)
