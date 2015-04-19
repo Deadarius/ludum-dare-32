@@ -51,6 +51,7 @@ var socketIo = socket();
 var username;
 var currentPlayer;
 var kills = 0;
+var loginTime;
 
 setInterval(function(){
   socketIo.emit('heart-beat');
@@ -170,6 +171,13 @@ function checkKey(e) {
     return;
   }
   var commandInputValue = commandInput.value;
+  var toTrack = commandInputValue;
+  //prevent tracking usernames
+  if(toTrack.indexOf('login') !== -1){
+    toTrack = 'login';
+  }
+
+  mixpanel.track('Command Executed', {command:  toTrack});
   addLog('$ ' + commandInputValue);
   commandInput.value = '';
 
@@ -187,6 +195,7 @@ function checkKey(e) {
     }
     kills = 0;
     socketIo.emit('login', username);
+    loginTime = new Date();
   }
   else if(cmd === 'help'){
     addLog('login &lt;username&gt;');
@@ -259,5 +268,5 @@ addLog('CMDer v1.0.0');
 addLog('Initialising...');
 addLog('=========WELCOME=========');
 addLog('type \'help\' for available commands');
-
+mixpanel.track('Visit');
 render();

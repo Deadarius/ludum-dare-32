@@ -76,6 +76,7 @@
 	// Custom Globals
 	"globals"       : {
 		"module"	: true,
-		"require"	: true
+		"require"	: true,
+    "mixpanel": true
 	}        // additional predefined global variables
 }

@@ -1,5 +1,6 @@
 'use strict';
-
+var Mixpanel = require('mixpanel');
+var mixpanel = Mixpanel.init('9efbd3e13a579f341a23369b7be12d05');
 var uuid = require('uuid');
 var path = require('path');
 var express = require('express');
@@ -28,6 +29,7 @@ var state = {
 };
 
 socketIo.on('connection', function (socket) {
+  mixpanel.track('Connection');
 	console.log('User connected');
   var connection = {
     socket: socket,
@@ -39,6 +41,7 @@ socketIo.on('connection', function (socket) {
   socket.emit('commands', commandsCache);
 
   socket.on('login', function(username){
+    mixpanel.track('Login');
     console.log('LOGIN: %s[%s]', username, this.id);
     addNotification('login', username + ' has just joined the party');
     state.units[this.id] = {
@@ -48,10 +51,11 @@ socketIo.on('connection', function (socket) {
       },
       direction: 'n',
       username: username,
-      dead: false
+      dead: false,
     };
     connection.username = username;
     connection.kills = 0;
+    connection.loggedInTime = new Date();
 
     socketIo.emit('state', state);
   });
@@ -243,6 +247,9 @@ function updateBullets(){
             killer.kills++;
           }
           addNotification('dead', deathMessage(killer.username, unit.username));
+          var killed = connections[unit.id];
+          var timeAlive = new Date() - killed.loggedInTime;
+          mixpanel.track('Died', {kills: killed.kills, timeAlive: timeAlive});
 
           socketIo.emit('dead', {
             died: unit.username,
@@ -256,7 +263,6 @@ function updateBullets(){
 }
 
 setInterval(function(){
-
   if(commandsCache.length > 0){
     socketIo.emit('commands', commandsCache);
   }
@@ -277,6 +283,7 @@ setInterval(function(){
 }, 200);
 
 app.use('/leaderboard', function(req, res){
+  mixpanel.track('Leaderboard request');
   MongoClient.connect(url, function(err, db) {
     var leaderboard = db.collection('leaderboard');
     leaderboard.find({}).sort( { kills: -1 } ).limit(30).toArray(function(err, docs) {
