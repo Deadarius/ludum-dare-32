@@ -1,0 +1,35 @@
+{
+  "name": "ludum-dare-32",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/index.js",
+    "watch": "watchify src/index.js -o dist/bundle.js -dv",
+    "copy-assets": "cp -r src/assets dist/",
+    "copy-styles": "cp src/index.css dist/",
+    "copy-html": "cp src/index.html dist/",
+    "bundle": "browserify src/index.js -o dist/bundle.js",
+    "clean": "rm -rf dist && mkdir dist",
+    "build": "npm run clean && npm run bundle && npm run copy-assets && npm run copy-styles && npm run copy-html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Deadarius/ludum-dare-32.git"
+  },
+  "author": "",
+  "license": " ",
+  "bugs": {
+    "url": "https://github.com/Deadarius/ludum-dare-32/issues"
+  },
+  "homepage": "https://github.com/Deadarius/ludum-dare-32",
+  "dependencies": {
+    "browserify": "^9.0.8",
+    "express": "^4.12.3",
+    "lodash": "^3.7.0",
+    "socket.io": "^1.3.5",
+    "socket.io-client": "^1.3.5",
+    "three": "^0.70.0"
+  }
+}
