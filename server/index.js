@@ -7,6 +7,8 @@ var app = express();
 var server = require('http').Server(app);
 var socketIo = require('socket.io')(server);
 var _ = require('lodash');
+var MongoClient = require('mongodb').MongoClient;
+var url = process.env.MONGO;
 
 var deathMessage = require('./death-message');
 var commandsCache = [];
@@ -27,10 +29,11 @@ var state = {
 
 socketIo.on('connection', function (socket) {
 	console.log('User connected');
-  connections[socket.id] = {
+  var connection = {
     socket: socket,
     lastHeartBeat: new Date()
   };
+  connections[socket.id] = connection;
 
   socket.emit('state', state);
   socket.emit('commands', commandsCache);
@@ -45,9 +48,11 @@ socketIo.on('connection', function (socket) {
       },
       direction: 'n',
       username: username,
-      dead: false,
-      killed: 0
+      dead: false
     };
+    connection.username = username;
+    connection.kills = 0;
+
     socketIo.emit('state', state);
   });
 
@@ -140,6 +145,20 @@ function executeCommands(){
   }
 
   commandsCache.forEach(function(command){
+    if(command.command === 'submit'){
+      var connection = connections[command.id];
+      MongoClient.connect(url, function(err, db) {
+        var leaderboard = db.collection('leaderboard');
+        leaderboard.insert({name:connection.username, kills: connection.kills}, function(err) {
+          if(err){
+            console.error(err);
+          }
+          db.close();
+        });
+      });
+      return;
+    }
+
     var unit = state.units[command.id];
     if(unit){
       switch(command.command){
@@ -164,6 +183,7 @@ function executeCommands(){
             direction: _.clone(unit.direction),
             shotBy: command.id
           });
+          break;
       }
     }
   });
@@ -188,9 +208,9 @@ function updateBullets(){
         if(unit.position.x === bullet.position.x &&
           unit.position.y === bullet.position.y){
           delete state.units[id];
-          var killer = state.units[bullet.shotBy];
+          var killer = connections[bullet.shotBy];
           if(killer){
-            killer.killed++;
+            killer.kills++;
           }
           addNotification('dead', deathMessage(killer.username, unit.username));
 
@@ -226,7 +246,20 @@ setInterval(function(){
   }
 }, 50);
 
+app.use('/leaderboard', function(req, res){
+  MongoClient.connect(url, function(err, db) {
+    var leaderboard = db.collection('leaderboard');
+    leaderboard.find({}).sort( { kills: -1 } ).limit(30).toArray(function(err, docs) {
+      if(err){
+        console.error(err);
+      }
+      db.close();
+      res.send(docs);
+    });
+  });
+});
 app.use('/', express.static(path.join(__dirname, '../dist')));
+
 
 server.listen(process.env.PORT || 3000);
 

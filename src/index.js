@@ -52,6 +52,7 @@ camera.position.z = 800;
 var socketIo = socket();
 var username;
 var currentPlayer;
+var kills = 0;
 
 setInterval(function(){
   socketIo.emit('heart-beat');
@@ -82,6 +83,7 @@ socketIo.on('dead', function(data){
     addDanger('You\'re killed by ' + data.killer);
   }
   else if (data.killer === username) {
+    kills++;
     addWarning('You killed ' + data.died);
   }
 
@@ -165,6 +167,7 @@ function checkKey(e) {
       addDanger('ERROR: player with specified username already in game');
       return;
     }
+    kills = 0;
     socketIo.emit('login', username);
   }
   else if(cmd === 'help'){
@@ -175,6 +178,33 @@ function checkKey(e) {
     addLog('right');
     addLog('uturn');
     addLog('shot');
+    addLog('stats');
+    addLog('submit');
+    addLog('best');
+    addLog('about');
+  }
+  else if(cmd === 'about'){
+    addLog('CMDer v1.0.0');
+    addLog('Ludum Dare #32 entry');
+    addLog('Made by @deadarius');
+  }
+  else if(cmd === 'stats'){
+    addLog('username: ' + username);
+    addLog('kills: ' + kills);
+  }
+  else if(cmd === 'best'){
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function(){
+      if (xmlHttp.readyState === 4 && xmlHttp.status === 200){
+        addLog('=======LEADERBOARD=======');
+        var data = JSON.parse(xmlHttp.responseText);
+        _.each(data, function(leader){
+          addLog(leader.name + ': ' + leader.kills);
+        });
+      }
+    };
+    xmlHttp.open('GET', '/leaderboard', true);
+    xmlHttp.send();
   }
   else{
     socketIo.emit('command', commandInputValue);
