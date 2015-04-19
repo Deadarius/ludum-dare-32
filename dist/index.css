@@ -19,12 +19,12 @@ document, body{
   height: 95vh;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
   justify-content: flex-end;
   color: lightblue;
   font-family: Courier;
   font-size: 12pt;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 #log div{
@@ -57,4 +57,7 @@ document, body{
   bottom: 0;
   font-family: Courier;
   font-size: 14pt;
+  border: none;
+  outline: none;
+  padding: 0;
 }

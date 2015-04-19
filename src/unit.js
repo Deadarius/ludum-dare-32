@@ -1,17 +1,16 @@
 'use strict';
 
 var THREE = require('three');
-var step = 30;
+var step = 100;
 
 function Unit(scene, material){
-  var geometry = new THREE.PlaneGeometry(50, 50, 1, 1);
+  var geometry = new THREE.PlaneGeometry(100, 100, 1, 1);
   var mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set( 1, 1, 1 );
   this.mesh = mesh;
   scene.add(this.mesh);
   this._scene = scene;
-  this.direction = 'n';
-  this.position = {x:1, y: 1};
+  this._position = {x: 0, y: 0};
+  this._isInitPositioned = false;
 }
 
 Object.defineProperty(Unit.prototype, 'direction', {
@@ -42,9 +41,14 @@ Object.defineProperty(Unit.prototype, 'position', {
     return this._position;
   },
   set: function(value){
+    if(!this._isInitPositioned){
+      this._position = value;
+      this.mesh.position.z = 1;
+      this._isInitPositioned = true;
+    }
+    this.mesh.position.x = this._position.x * step;
+    this.mesh.position.y = this._position.y * step;
     this._position = value;
-    this.mesh.position.x = value.x * step;
-    this.mesh.position.y = value.y * step;
   }
 });
 
@@ -52,88 +56,25 @@ Unit.prototype.die = function die(){
   this._scene.remove(this.mesh);
 };
 
-Unit.prototype.move = function move(){
-  switch(this.direction){
-    case 'n':
-      this.mesh.position.y += step;
-      break;
-    case 'w':
-      this.mesh.position.x -= step;
-      break;
-    case 'e':
-      this.mesh.position.x += step;
-      break;
-    case 's':
-      this.mesh.position.y -= step;
-      break;
+Unit.prototype.animate = function move(){
+  if(!this._isInitPositioned){
+    return;
   }
-};
+  var currentX = this.mesh.position.x / step;
+  var currentY = this.mesh.position.y / step;
 
-Unit.prototype.reverse = function reverse(){
-  switch(this.direction){
-    case 'n':
-      this.mesh.position.y -= step;
-      break;
-    case 'w':
-      this.mesh.position.x += step;
-      break;
-    case 'e':
-      this.mesh.position.x -= step;
-      break;
-    case 's':
-      this.mesh.position.y += step;
-      break;
+  if(currentX < this.position.x){
+    this.mesh.position.x += 3;
   }
-};
-
-Unit.prototype.left = function left(){
-  switch(this.direction){
-    case 'n':
-      this.direction = 'w';
-      break;
-    case 'w':
-      this.direction = 's';
-      break;
-    case 's':
-      this.direction = 'e';
-      break;
-    case 'e':
-      this.direction = 'n';
-      break;
+  else if(currentX > this.position.x){
+    this.mesh.position.x -= 3;
   }
-};
 
-Unit.prototype.right = function right(){
-  switch(this.direction){
-    case 'n':
-      this.direction = 'e';
-      break;
-    case 'e':
-      this.direction = 's';
-      break;
-    case 's':
-      this.direction = 'w';
-      break;
-    case 'w':
-      this.direction = 'n';
-      break;
+  if(currentY < this.position.y){
+    this.mesh.position.y += 3;
   }
-};
-
-Unit.prototype.uturn = function uturn(){
-  switch(this.direction){
-    case 'n':
-      this.direction = 's';
-      break;
-    case 'e':
-      this.direction = 'w';
-      break;
-    case 's':
-      this.direction = 'n';
-      break;
-    case 'w':
-      this.direction = 'e';
-      break;
+  else if(currentY > this.position.y){
+    this.mesh.position.y -= 3;
   }
 };
 

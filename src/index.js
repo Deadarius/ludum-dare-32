@@ -6,7 +6,7 @@ var Unit = require('./unit');
 var audio = require('./audio');
 
 var _ = require('lodash');
-var util = require('util');
+
 var minimist = require('minimist');
 
 var scene = new THREE.Scene();
@@ -15,7 +15,7 @@ var scene = new THREE.Scene();
     color: 0x00ff00,
     wireframe: true
 });
-var backGeometry = new THREE.PlaneBufferGeometry(100000, 100000, 500, 500);
+var backGeometry = new THREE.PlaneGeometry(100000, 100000, 500, 500);
 var backMesh = new THREE.Mesh(backGeometry, backMaterial);
 backMesh.position.set(0, 0, 0);
 scene.add(backMesh);
@@ -27,15 +27,10 @@ renderer.setSize(viewport.clientWidth, viewport.clientHeight);
 
 viewport.appendChild(renderer.domElement);
 
-var ambientLight = new THREE.AmbientLight(0x404040);
-var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
-directionalLight.position.set(0, 1, 1);
 
-scene.add(ambientLight);
-scene.add(directionalLight);
 
 //var camera = new THREE.OrthographicCamera(0, 0, window.innerWidth, window.innerHeight, 0.1, 1000);
-var camera = new THREE.PerspectiveCamera( 75, viewport.clientWidth/viewport.clientHeight, 0.1, 1000000 );
+var camera = new THREE.PerspectiveCamera( 90, viewport.clientWidth/viewport.clientHeight, 0.1, 1000000 );
 
 var unitTexture;
 unitTexture = THREE.ImageUtils.loadTexture('assets/unit.png');
@@ -52,10 +47,11 @@ bulletTexture.magFilter = THREE.NearestFilter;
 
 var bulletMaterial = new THREE.MeshBasicMaterial( { map: bulletTexture, color: 0xffff00, transparent: true } );
 
-camera.position.z = 500;
+camera.position.z = 800;
 
 var socketIo = socket();
 var username;
+var currentPlayer;
 
 setInterval(function(){
   socketIo.emit('heart-beat');
@@ -69,6 +65,7 @@ function addLog(text){
   var newElement = document.createElement('div');
   newElement.innerHTML = text;
   logger.appendChild(newElement);
+  logger.scrollTop = logger.scrollHeight;
   return newElement;
 }
 
@@ -117,17 +114,19 @@ socketIo.on('state', function(state){
       var player = players[unit.username];
       if(!player){
         if(unit.username === username){
-          player = players[unit.username] = new Unit(scene, playerUnitMaterial);
+          player = currentPlayer = players[unit.username] = new Unit(scene, playerUnitMaterial);
         } else {
           player = players[unit.username] = new Unit(scene, unitMaterial);
         }
         player.username = unit.username;
       }
+      if(player.position.x !== unit.position.x || player.position.y !== unit.position.y){
+        player.position = unit.position;
+      }
 
-      unit.username === username && camera.lookAt(player.mesh.position);
-
-      player.position = unit.position;
-      player.direction = unit.direction;
+      if(player.direction !== unit.direction){
+        player.direction = unit.direction;
+      }
     });
 
   state.bullets.forEach(function(bulletServer, index){
@@ -162,9 +161,15 @@ function checkKey(e) {
   addLog(commandInput.value);
   commandInput.value = '';
 }
-
+audio.music();
 var render = function () {
   requestAnimationFrame( render );
+  _.each(players, function(player){
+    player.animate();
+  });
+  if(currentPlayer){
+    camera.lookAt(currentPlayer.mesh.position);
+  }
   renderer.render(scene, camera);
 };
 
