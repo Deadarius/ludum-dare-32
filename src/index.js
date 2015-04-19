@@ -149,19 +149,39 @@ function checkKey(e) {
   if (+code !== 13) {
     return;
   }
+  var commandInputValue = commandInput.value;
+  addLog('$ ' + commandInputValue);
+  commandInput.value = '';
 
-  var args = minimist(commandInput.value.split(' '));
-  if(args._[0] === 'login'){
+  var args = minimist(commandInputValue.split(' '));
+  var cmd = args._[0];
+  if(cmd === 'login'){
     username = args._[1];
+    if(!username){
+      addDanger('ERROR: no username provided');
+      return;
+    }
+    else if(players[username]){
+      addDanger('ERROR: player with specified username already in game');
+      return;
+    }
     socketIo.emit('login', username);
   }
-  else{
-    socketIo.emit('command', commandInput.value);
+  else if(cmd === 'help'){
+    addLog('login &lt;username&gt;');
+    addLog('move');
+    addLog('reverse');
+    addLog('left');
+    addLog('right');
+    addLog('uturn');
+    addLog('shot');
   }
-  addLog(commandInput.value);
-  commandInput.value = '';
+  else{
+    socketIo.emit('command', commandInputValue);
+  }
 }
 audio.music();
+
 var render = function () {
   requestAnimationFrame( render );
   _.each(players, function(player){
@@ -169,8 +189,17 @@ var render = function () {
   });
   if(currentPlayer){
     camera.lookAt(currentPlayer.mesh.position);
+    var xx = Math.pow(currentPlayer.mesh.position.x, 2);
+    var yy = Math.pow(currentPlayer.mesh.position.y, 2);
+    var distanceFromCentre =  Math.sqrt(xx + yy);
+    camera.position.z = 800 + distanceFromCentre;
   }
   renderer.render(scene, camera);
 };
+
+addLog('CMDer v1.0.0');
+addLog('Initialising...');
+addLog('=========WELCOME=========');
+addLog('type \'help\' for available commands');
 
 render();
