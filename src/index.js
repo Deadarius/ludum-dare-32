@@ -57,7 +57,7 @@ setInterval(function(){
 }, 5000);
 
 var players = {};
-var bullets = [];
+var bullets = {};
 var logger = document.getElementById('log');
 
 function addLog(text){
@@ -103,12 +103,17 @@ socketIo.on('disconnect', function(username){
   addWarning(username + ' disconnected');
 });
 
+socketIo.on('destroy-bullet', function(id){
+  bullets[id].die();
+  delete bullets[id];
+});
+
 socketIo.on('notifications', function(notifications){
   if(_.some(notifications, {key: 'login'})){
     audio.spawn();
   }
 
-  if(_.some(notifications, {command: 'dead'})){
+  if(_.some(notifications, {key: 'dead'})){
     audio.die();
   }
 
@@ -138,14 +143,14 @@ socketIo.on('state', function(state){
       }
     });
 
-  state.bullets.forEach(function(bulletServer, index){
-    var bullet = bullets[index];
+  _.values(state.bullets).forEach(function(bulletServer){
+    var bullet = bullets[bulletServer.id];
     if(!bullet){
-      bullet = bullets[index] = new Unit(scene, bulletMaterial);
+      bullet = bullets[bulletServer.id] = new Unit(scene, bulletMaterial);
     }
 
     if(bullet.position.x !== bulletServer.position.x || bullet.position.y !== bulletServer.position.y){
-        bullet.position = bulletServer.position;
+      bullet.position = bulletServer.position;
     }
 
     if(bullet.direction !== bulletServer.direction){

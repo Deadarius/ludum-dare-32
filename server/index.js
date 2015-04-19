@@ -1,6 +1,6 @@
 'use strict';
 
-var util = require('util');
+var uuid = require('uuid');
 var path = require('path');
 var express = require('express');
 var app = express();
@@ -24,7 +24,7 @@ function addNotification(key, text){
 
 var state = {
 	units: {},
-  bullets: [],
+  bullets: {},
 };
 
 socketIo.on('connection', function (socket) {
@@ -199,11 +199,13 @@ function executeCommands(){
           strafeRightDict[unit.direction](unit);
           break;
         case 'shot':
-          state.bullets.push({
+          var newId = uuid.v4();
+          state.bullets[newId] = {
+            id: newId,
             position: _.clone(unit.position),
             direction: _.clone(unit.direction),
             shotBy: command.id
-          });
+          };
           break;
       }
     }
@@ -213,21 +215,28 @@ function executeCommands(){
   return true;
 }
 
+function destroyBullet(id){
+  delete state.bullets[id];
+  socketIo.emit('destroy-bullet', id);
+}
+
 function updateBullets(){
   if(state.bullets.length === 0){
     return false;
   }
 
-  state.bullets.forEach(function(bullet, index){
+  Object.keys(state.bullets).forEach(function(bulletId){
+    var bullet = state.bullets[bulletId];
     moveDict[bullet.direction](bullet);
     if(bullet.position.x > 1000 || bullet.position.y > 1000 ||
       bullet.position.x < -1000 || bullet.position.y < -1000){
-        state.bullets.splice(index);
+        destroyBullet(bulletId);
     } else {
       Object.keys(state.units).forEach(function(id){
         var unit = state.units[id];
         if(unit.position.x === bullet.position.x &&
           unit.position.y === bullet.position.y){
+          destroyBullet(bulletId);
           delete state.units[id];
           var killer = connections[bullet.shotBy];
           if(killer){
