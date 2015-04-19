@@ -117,16 +117,16 @@ var moveDict = {
 
 var strafeLeftDict = {
   'n': function(unit){unit.position.x--;},
-  'e': function(unit){unit.position.y--;},
+  'e': function(unit){unit.position.y++;},
   's': function(unit){unit.position.x++;},
-  'w': function(unit){unit.position.y++;},
+  'w': function(unit){unit.position.y--;},
 };
 
 var strafeRightDict = {
   'n': function(unit){unit.position.x++;},
-  'e': function(unit){unit.position.y++;},
+  'e': function(unit){unit.position.y--;},
   's': function(unit){unit.position.x--;},
-  'w': function(unit){unit.position.y--;},
+  'w': function(unit){unit.position.y++;},
 };
 
 var reverseDict = {
