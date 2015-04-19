@@ -10,7 +10,7 @@ document, body{
   height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: blue;
+  background-color: darkblue;
   float:left;
 }
 
@@ -19,6 +19,27 @@ document, body{
   height: 95vh;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: lightblue;
+  font-family: Courier;
+  font-size: 12pt;
+}
+
+#log div{
+  padding-left: 3pt;
+  /*align-self: flex-end;*/
+}
+
+#log div.warning{
+  color: orange;
+  /*align-self: flex-end;*/
+}
+
+#log div.danger{
+  color: darkred;
+  /*align-self: flex-end;*/
 }
 
 #viewport{

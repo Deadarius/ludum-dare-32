@@ -22,6 +22,10 @@ socketIo.on('connection', function (socket) {
     socket: socket,
     lastHeartBeat: new Date()
   };
+
+  socket.emit('state', state);
+  socket.emit('commands', commandsCache);
+
   socket.on('login', function(username){
     console.log('LOGIN: %s[%s]', username, this.id);
     state.units[this.id] = {
@@ -34,9 +38,7 @@ socketIo.on('connection', function (socket) {
       dead: false,
       killed: 0
     };
-
-    socket.emit('state', state);
-    socket.emit('commands', commandsCache);
+    socketIo.emit('state', state);
   });
 
   socket.on('heart-beat', function(){
@@ -104,9 +106,10 @@ var reverseDict = {
   'w': function(unit){unit.position.x++;},
 };
 
-setInterval(function(){
+function timeOutConnections(){
   var now = new Date();
   var changed = false;
+
   Object.keys(connections).forEach(function(id){
     var connection = connections[id];
     var noHeartBeatDuration = now - connection.lastHeartBeat;
@@ -118,9 +121,17 @@ setInterval(function(){
     }
   });
 
-  if(commandsCache.length > 0){
-    commandsCache.forEach(function(command){
-      var unit = state.units[command.id];
+  return changed;
+}
+
+function executeCommands(){
+  if(commandsCache.length === 0){
+    return false;
+  }
+
+  commandsCache.forEach(function(command){
+    var unit = state.units[command.id];
+    if(unit){
       switch(command.command){
         case 'move':
           moveDict[unit.direction](unit);
@@ -144,32 +155,52 @@ setInterval(function(){
             shotBy: command.id
           });
       }
-    });
-    changed = true;
-    commandsCache = [];
+    }
+  });
+
+  commandsCache = [];
+  return true;
+}
+
+function updateBullets(){
+  if(state.bullets.length === 0){
+    return false;
   }
 
-  if(state.bullets.length > 0){
-    state.bullets.forEach(function(bullet, index){
-      moveDict[bullet.direction](bullet);
+  state.bullets.forEach(function(bullet, index){
+    moveDict[bullet.direction](bullet);
+    if(bullet.position.x > 1000 || bullet.position.y > 1000 ||
+      bullet.position.x < -1000 || bullet.position.y < -1000){
+        delete state.bullets[index];
+    } else {
       Object.keys(state.units).forEach(function(id){
         var unit = state.units[id];
         if(unit.position.x === bullet.position.x &&
           unit.position.y === bullet.position.y){
-            unit.dead = true;
-            var killer = state.units[bullet.shotBy];
-            if(killer){
-              killer.killed++;
-            }
+          delete state.units[id];
+          var killer = state.units[bullet.shotBy];
+          if(killer){
+            killer.killed++;
+          }
+
+          socketIo.emit('dead', {
+            died: unit.username,
+            killer: killer.username
+          });
         }
       });
-      if(bullet.position.x > 1000 || bullet.position.y > 1000 ||
-        bullet.position.x < -1000 || bullet.position.y < -1000){
-          delete state.bullets[index];
-      }
-    });
-    changed = true;
-  }
+    }
+  });
+  return true;
+}
+
+setInterval(function(){
+  var changed = false;
+
+  changed = timeOutConnections();
+  changed = executeCommands() || changed;
+  changed = updateBullets() || changed;
+
   if(changed){
     socketIo.emit('state', state);
     socketIo.emit('commands', commandsCache);
@@ -179,6 +210,5 @@ setInterval(function(){
 
 app.use('/', express.static(path.join(__dirname, '../dist')));
 
-//app.listen(process.env.PORT || 3000);
 server.listen(process.env.PORT || 3000);
 

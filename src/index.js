@@ -13,10 +13,10 @@ var scene = new THREE.Scene();
     color: 0x00ff00,
     wireframe: true
 });
- var backGeometry = new THREE.PlaneGeometry(100000, 100000, 500, 500);
- var backMesh = new THREE.Mesh(backGeometry, backMaterial);
- backMesh.position.set(0, 0, 0);
- scene.add(backMesh);
+var backGeometry = new THREE.PlaneGeometry(100000, 100000, 500, 500);
+var backMesh = new THREE.Mesh(backGeometry, backMaterial);
+backMesh.position.set(0, 0, 0);
+scene.add(backMesh);
 
 var viewport = document.getElementById('viewport');
 
@@ -41,13 +41,14 @@ unitTexture.minFilter = THREE.NearestFilter;
 unitTexture.magFilter = THREE.NearestFilter;
 
 var unitMaterial = new THREE.MeshBasicMaterial( { map: unitTexture, color: 0xff0000, transparent: true } );
+var playerUnitMaterial = new THREE.MeshBasicMaterial( { map: unitTexture, color: 0xffffff, transparent: true } );
 
 var bulletTexture;
 bulletTexture = THREE.ImageUtils.loadTexture('assets/bullet.png');
 bulletTexture.minFilter = THREE.NearestFilter;
 bulletTexture.magFilter = THREE.NearestFilter;
 
-var bulletMaterial = new THREE.MeshBasicMaterial( { map: bulletTexture, color: 0xff0000, transparent: true } );
+var bulletMaterial = new THREE.MeshBasicMaterial( { map: bulletTexture, color: 0xffff00, transparent: true } );
 
 camera.position.z = 500;
 
@@ -60,27 +61,50 @@ setInterval(function(){
 
 var players = {};
 var bullets = [];
+var logger = document.getElementById('log');
+
+function addLog(text){
+  var newElement = document.createElement('div');
+  newElement.innerHTML = text;
+  logger.appendChild(newElement);
+  return newElement;
+}
+
+function addWarning(text){
+  addLog(text).className = 'warning';
+}
+
+function addDanger(text){
+  addLog(text).className = 'danger';
+}
+
+socketIo.on('dead', function(data){
+  if(data.died === username){
+    addDanger('You\'re killed by ' + data.killer);
+  }
+  else if (data.killer === username) {
+    addWarning('You killed ' + data.died);
+  }
+
+  players[data.died].die();
+});
 
 socketIo.on('state', function(state){
   _.values(state.units)
     .forEach(function(unit){
       var player = players[unit.username];
       if(!player){
-        player = players[unit.username] = new Unit(scene, unitMaterial);
+        if(unit.username === username){
+          player = players[unit.username] = new Unit(scene, playerUnitMaterial);
+          camera.lookAt(player.mesh.position);
+        } else {
+          player = players[unit.username] = new Unit(scene, unitMaterial);
+        }
         player.username = unit.username;
       }
 
       player.position = unit.position;
       player.direction = unit.direction;
-      if(player.username === username){
-        console.debug('%s:', player.username);
-        console.debug('    POS:%s', util.inspect(player.position));
-        console.debug('    DIR:%s:', util.inspect(player.direction));
-        camera.lookAt(player.mesh.position);
-      }
-      if(unit.dead){
-        player.die();
-      }
     });
 
   state.bullets.forEach(function(bulletServer, index){
@@ -110,8 +134,9 @@ function checkKey(e) {
     socketIo.emit('login', username);
   }
   else{
-  socketIo.emit('command', commandInput.value);
-}
+    socketIo.emit('command', commandInput.value);
+  }
+  addLog(commandInput.value);
   commandInput.value = '';
 }
 
