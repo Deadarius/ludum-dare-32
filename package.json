@@ -9,10 +9,12 @@
     "watch": "watchify src/index.js -o dist/bundle.js -dv",
     "copy-assets": "cp -r src/assets dist/",
     "copy-styles": "cp src/index.css dist/",
-    "copy-html": "cp src/index.html dist/",
+    "copy-html": "cp src/index.html dist/ && cp src/mixpanel.js dist/",
     "bundle": "browserify src/index.js -o dist/bundle.js",
+    "bundle-prd": "browserify src/index.js | uglifyjs > dist/bundle.js",
     "clean": "rm -rf dist && mkdir dist",
-    "build": "npm run clean && npm run bundle && npm run copy-assets && npm run copy-styles && npm run copy-html"
+    "build": "npm run clean && npm run bundle && npm run copy-assets && npm run copy-styles && npm run copy-html",
+    "build-prd": "npm run clean && npm run bundle-prd && npm run copy-assets && npm run copy-styles && npm run copy-html"
   },
   "repository": {
     "type": "git",
