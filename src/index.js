@@ -82,6 +82,7 @@ socketIo.on('dead', function(data){
     addDanger('You\'re killed by ' + data.killer);
     addWarning('Your score: ' + kills);
     addWarning('Type \'submit\' to add your result to leaderboard');
+    addWarning('Type \'subscribe <email>\' to subscribe for updates');
   }
   else if (data.killer === username) {
     kills++;
@@ -209,6 +210,7 @@ function checkKey(e) {
     addLog('shot');
     addLog('stats');
     addLog('submit');
+    addLog('subscribe <email>');
     addLog('best');
     addLog('about');
     addLog('=========================');

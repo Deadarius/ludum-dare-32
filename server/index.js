@@ -177,6 +177,19 @@ function executeCommands(){
       });
       return;
     }
+    else if(command.command.indexOf('subscribe') > -1){
+      var email = command.command.split('subscribe')[1].trim();
+      MongoClient.connect(url, function(err, db) {
+        var subcribers = db.collection('subcribers');
+        subcribers.insert({email:email}, function(err) {
+          if(err){
+            console.error(err);
+          }
+          db.close();
+        });
+      });
+      return;
+    }
 
     var unit = state.units[command.id];
     if(unit){
