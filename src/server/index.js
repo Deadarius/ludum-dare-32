@@ -31,7 +31,7 @@ var state = {
 };
 
 socketIo.on('connection', function (socket) {
-  mixpanel.track('Connection');
+  mixpanel.track('Connection', {distinct_id: socket.id});
 	console.log('User connected');
   var connection = {
     socket: socket,
@@ -43,7 +43,7 @@ socketIo.on('connection', function (socket) {
   socket.emit('commands', commandsCache);
 
   socket.on('login', function(username){
-    mixpanel.track('Login');
+    mixpanel.track('Login', {distinct_id: this.id});
     console.log('LOGIN: %s[%s]', username, this.id);
     addNotification('login', username + ' has just joined the party');
     state.units[this.id] = {
@@ -287,7 +287,7 @@ function updateBullets(){
           addNotification('dead', deathMessage(killer.username, unit.username));
           var killed = connections[unit.id];
           var timeAlive = new Date() - killed.loggedInTime;
-          mixpanel.track('Died', {kills: killed.kills, timeAlive: timeAlive});
+          mixpanel.track('Died', { distinct_id: unit.id, kills: killed.kills, timeAlive: timeAlive});
 
           socketIo.emit('dead', {
             died: unit.username,
@@ -321,7 +321,8 @@ setInterval(function(){
 }, 200);
 
 app.use('/leaderboard', function(req, res){
-  mixpanel.track('Leaderboard request');
+  var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  mixpanel.track('Leaderboard request', { distinct_id: ip });
   MongoClient.connect(url, function(err, db) {
     var leaderboard = db.collection('leaderboard');
     leaderboard.find({}).sort( { kills: -1 } ).limit(30).toArray(function(err, docs) {
@@ -334,7 +335,6 @@ app.use('/leaderboard', function(req, res){
   });
 });
 app.use('/', express.static(path.join(__dirname, '../../dist')));
-
 
 server.listen(process.env.PORT || 3000);
 
