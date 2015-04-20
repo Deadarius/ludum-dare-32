@@ -167,17 +167,19 @@ function executeCommands(){
   }
 
   commandsCache.forEach(function(command){
+    var connection = connections[command.id];
     if(command.command === 'submit'){
-      var connection = connections[command.id];
-      MongoClient.connect(url, function(err, db) {
-        var leaderboard = db.collection('leaderboard');
-        leaderboard.insert({name:connection.username, kills: connection.kills}, function(err) {
-          if(err){
-            console.error(err);
-          }
-          db.close();
+      if(connection){
+        MongoClient.connect(url, function(err, db) {
+          var leaderboard = db.collection('leaderboard');
+          leaderboard.insert({name:connection.username, kills: connection.kills}, function(err) {
+            if(err){
+              console.error(err);
+            }
+            db.close();
+          });
         });
-      });
+      }
       return;
     }
     else if(command.command.indexOf('subscribe') > -1){
@@ -191,6 +193,13 @@ function executeCommands(){
           db.close();
         });
       });
+      return;
+    }
+    else if(command.command.indexOf('say') > -1){
+      var text = command.command.split('say')[1].trim();
+      if(connection){
+        addNotification('chat', connection.username + ': ' + text);
+      }
       return;
     }
 

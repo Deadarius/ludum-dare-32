@@ -214,6 +214,7 @@ function checkKey(e) {
     addLog('strafe-right');
     addLog('uturn');
     addLog('shoot');
+    addLog('say');
     addLog('stats');
     addLog('submit');
     addLog('subscribe &lt;email&gt;');
