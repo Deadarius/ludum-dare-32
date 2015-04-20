@@ -23,6 +23,7 @@ document, body{
   font-family: Courier;
   font-size: 12pt;
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 0;
 }
 

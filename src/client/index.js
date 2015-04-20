@@ -26,15 +26,18 @@ scene.add(backMesh);
 
 var viewport = document.getElementById('viewport');
 
+var camera = new THREE.PerspectiveCamera( CONSTANTS.CAMERA_ANGLE, viewport.clientWidth/viewport.clientHeight, 0.1, 1000000 );
 var renderer = new THREE.WebGLRenderer();
-renderer.setSize(viewport.clientWidth, viewport.clientHeight);
-
 viewport.appendChild(renderer.domElement);
 
+function setRendererSize(){
+  renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+  camera.aspect = viewport.clientWidth/viewport.clientHeight;
+  camera.updateProjectionMatrix();
+}
 
-
-//var camera = new THREE.OrthographicCamera(0, 0, window.innerWidth, window.innerHeight, 0.1, 1000);
-var camera = new THREE.PerspectiveCamera( CONSTANTS.CAMERA_ANGLE, viewport.clientWidth/viewport.clientHeight, 0.1, 1000000 );
+setRendererSize();
+window.addEventListener('resize', setRendererSize, false);
 
 var unitTexture;
 unitTexture = THREE.ImageUtils.loadTexture('assets/unit.png');
