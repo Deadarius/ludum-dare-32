@@ -94,6 +94,8 @@ socketIo.on('dead', function(data){
     addWarning('Your score: ' + kills);
     addWarning('Type \'submit\' to add your result to leaderboard');
     addWarning('Type \'subscribe &lt;email&gt;\' to subscribe for updates');
+    addWarning('Login again to play one more time');
+
   }
   else if (data.killer === username) {
     kills++;
