@@ -218,7 +218,7 @@ function executeCommands(){
         case 'strafe-right':
           strafeRightDict[unit.direction](unit);
           break;
-        case 'shot':
+        case 'shoot':
           var newId = uuid.v4();
           state.bullets[newId] = {
             id: newId,

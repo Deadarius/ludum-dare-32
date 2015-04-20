@@ -101,8 +101,8 @@ socketIo.on('dead', function(data){
 });
 
 socketIo.on('commands', function(commands){
-  if(_.some(commands, {command: 'shot'})){
-    audio.shot();
+  if(_.some(commands, {command: 'shoot'})){
+    audio.shoot();
   }
 });
 
@@ -213,7 +213,7 @@ function checkKey(e) {
     addLog('strafe-left');
     addLog('strafe-right');
     addLog('uturn');
-    addLog('shot');
+    addLog('shoot');
     addLog('stats');
     addLog('submit');
     addLog('subscribe &lt;email&gt;');
