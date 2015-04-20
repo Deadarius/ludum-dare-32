@@ -76,6 +76,10 @@ function addLog(text){
   return newElement;
 }
 
+function addNotification(text){
+  addLog(text).className = 'notification';
+}
+
 function addWarning(text){
   addLog(text).className = 'warning';
 }
@@ -127,7 +131,7 @@ socketIo.on('notifications', function(notifications){
   }
 
   _.each(notifications, function(notification){
-    addLog(notification.text);
+    addNotification(notification.text);
   });
 });
 

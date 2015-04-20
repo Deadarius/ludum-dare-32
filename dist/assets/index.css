@@ -29,17 +29,19 @@ document, body{
 
 #log div{
   padding-left:3pt;
-  /*align-self: flex-end;*/
 }
 
 #log div.warning{
   color: orange;
-  /*align-self: flex-end;*/
 }
 
 #log div.danger{
   color: darkred;
-  /*align-self: flex-end;*/
+}
+
+#log div.notification{
+  color: white;
+  background-color: teal
 }
 
 #viewport{
