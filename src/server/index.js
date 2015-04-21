@@ -11,7 +11,7 @@ var server = require('http').Server(app);
 var socketIo = require('socket.io')(server);
 var _ = require('lodash');
 var MongoClient = require('mongodb').MongoClient;
-var url = process.env.MONGO;
+var url = 'mongodb://cmder:cmder@c97.alcatraz.0.mongolayer.com:10097,c97.alcatraz.1.mongolayer.com:10097,alcatraz.1.mongolayer.com:10097/cmder?replicaSet=set-54fa36849169caad09000b1d';
 
 var deathMessage = require('./death-message');
 var commandsCache = [];
@@ -329,13 +329,16 @@ app.use('/leaderboard', function(req, res){
   mixpanel.track('Leaderboard request', { distinct_id: ip });
   MongoClient.connect(url, function(err, db) {
     var leaderboard = db.collection('leaderboard');
-    leaderboard.find({}).sort( { kills: -1 } ).limit(30).toArray(function(err, docs) {
-      if(err){
-        console.error(err);
-      }
-      db.close();
-      res.send(docs);
-    });
+    leaderboard.find({kills:{$gt: 0} })
+      .sort( { kills: -1 } )
+      .limit(10)
+      .toArray(function(err, docs) {
+        if(err){
+          console.error(err);
+        }
+        db.close();
+        res.send(docs);
+      });
   });
 });
 app.use('/', express.static(path.join(__dirname, '../../dist')));
