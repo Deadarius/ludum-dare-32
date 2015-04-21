@@ -118,6 +118,18 @@ socketIo.on('disconnect', function(username){
   addWarning(username + ' disconnected');
 });
 
+var lastTimeServerWasAlive = new Date();
+socketIo.on('alive', function(){
+  lastTimeServerWasAlive = new Date();
+});
+
+setInterval(function(){
+  var now = new Date();
+  if(now - lastTimeServerWasAlive > 16000){
+    document.body.innerHTML = '<div class="massive-error">SERVER IS NOT RESPONDING. PLEASE TRY TO REFRESH THE PAGE LATER. I AM SOOOO SORRY T_T</div>';
+  }
+}, 15000);
+
 socketIo.on('destroy-bullet', function(id){
   bullets[id].die();
   delete bullets[id];

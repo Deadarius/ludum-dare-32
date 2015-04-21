@@ -320,6 +320,10 @@ setInterval(function(){
   }
 }, 200);
 
+setInterval(function(){
+  socketIo.emit('alive');
+}, 5000);
+
 app.use('/leaderboard', function(req, res){
   var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   mixpanel.track('Leaderboard request', { distinct_id: ip });
