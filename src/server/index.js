@@ -11,7 +11,7 @@ var server = require('http').Server(app);
 var socketIo = require('socket.io')(server);
 var _ = require('lodash');
 var MongoClient = require('mongodb').MongoClient;
-var url = 'mongodb://cmder:cmder@c97.alcatraz.0.mongolayer.com:10097,c97.alcatraz.1.mongolayer.com:10097,alcatraz.1.mongolayer.com:10097/cmder?replicaSet=set-54fa36849169caad09000b1d';
+var url = process.env.MONGO;
 
 var deathMessage = require('./death-message');
 var commandsCache = [];
