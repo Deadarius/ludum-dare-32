@@ -101,7 +101,31 @@ document, body{
 
 }
 
-@media (max-width: 900px) {
+@media (min-width: 480px) and (max-width: 750px) {
+  #sidebar, #log {
+    width: 30vw;
+    font-size: 8pt;
+  }
+  #viewport{
+    width: 70vw;
+    height: 95vh;
+  }
+  #command-container{
+    display: absolute;
+    bottom: 0;
+    width: 100vw;
+  }
+  #share-buttons{
+    right: 5px;
+    width: 15px;
+  }
+  #share-buttons img {
+    width: 15px;
+    padding: 2px;
+  }
+}
+
+@media (max-width: 480px) {
   #sidebar, #log {
     width: 35vw;
     font-size: 6pt;
