@@ -64,6 +64,22 @@ document, body{
   background-color: white;
 }
 
+@media (max-width: 900px) {
+  #sidebar, #log {
+    width: 35vw;
+    font-size: 6pt;
+  }
+  #viewport{
+    width: 65vw;
+    height: 95vh;
+  }
+  #command-container{
+    display: absolute;
+    bottom: 0;
+    width: 100vw;
+  }
+}
+
 #command{
   width: 90%;
   height: 5vh;
